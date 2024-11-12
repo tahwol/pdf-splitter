@@ -1,3 +1,0 @@
-streamlit
-PyMuPDF==1.18.17
-numpy
