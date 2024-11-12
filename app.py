@@ -1,51 +1,35 @@
-import fitz  # PyMuPDF
-import os
-import numpy as np
+import PyPDF2
 import streamlit as st
 
-# دالة لفصل ملف PDF
+# دالة لفصل ملف PDF باستخدام PyPDF2
 def split_pdf(pdf):
-    document = fitz.open(stream=pdf.read(), filetype="pdf")
-
-    current_document = None
+    reader = PyPDF2.PdfReader(pdf)
     documents = []
     output_files = []
 
-    for page_number in range(len(document)):
-        page = document.load_page(page_number)
+    current_document = PyPDF2.PdfWriter()
+    for page_number in range(len(reader.pages)):
+        page = reader.pages[page_number]
+        text = page.extract_text()
 
-        # التحقق إذا كانت الصفحة بيضاء (الفاصل) بناءً على النص ومستوى النصوع
-        text = page.get_text().strip()
-        pix = page.get_pixmap()
-
-        # تحويل صورة الصفحة إلى مصفوفة لتحليل مستوى النصوع
-        image_data = np.frombuffer(pix.samples, dtype=np.uint8)
-
-        # إذا كان متوسط النصوع عالياً بما يكفي، نعتبر الصفحة بيضاء
-        average_luminance = image_data.mean()
-        
-        if len(text) == 0 and average_luminance > 245:
-            # إغلاق الوثيقة الحالية إذا وجدت
-            if current_document is not None:
+        # التحقق من كون الصفحة بيضاء بناءً على النص
+        if text is None or text.strip() == "":
+            if current_document.get_num_pages() > 0:
                 documents.append(current_document)
-                current_document = None
+                current_document = PyPDF2.PdfWriter()
             continue
 
-        # إذا كانت هناك دعوى، البدء أو إضافة الصفحة إلى الوثيقة
-        if current_document is None:
-            current_document = fitz.open()  # إنشاء وثيقة جديدة
-        current_document.insert_pdf(document, from_page=page_number, to_page=page_number)
+        current_document.add_page(page)
 
-    # إضافة الوثيقة الأخيرة إذا وجدت
-    if current_document is not None:
+    if current_document.get_num_pages() > 0:
         documents.append(current_document)
 
     # حفظ الملفات المؤقتة
     for idx, doc in enumerate(documents):
         doc_name = f"document_{idx + 1}.pdf"
-        doc.save(doc_name)
+        with open(doc_name, "wb") as f:
+            doc.write(f)
         output_files.append(doc_name)
-        doc.close()
 
     return output_files
 
