@@ -1,0 +1,73 @@
+import PyPDF2
+import os
+import numpy as np
+import streamlit as st
+
+# دالة لفصل ملف PDF
+def split_pdf(pdf):
+    reader = PyPDF2.PdfReader(pdf)
+
+    current_writer = None
+    writers = []
+    output_files = []
+
+    for page_number in range(len(reader.pages)):
+        page = reader.pages[page_number]
+
+        # التحقق إذا كانت الصفحة بيضاء (الفاصل) بناءً على النص ومستوى النصوع
+        text = page.extract_text().strip()
+        x_object = page.get("/Resources").get("/XObject")
+
+        # إذا كانت الصفحة تحتوي على صورة، تحويلها إلى مصفوفة لتحليل مستوى النصوع
+        average_luminance = 0
+        if x_object:
+            for obj in x_object:
+                if x_object[obj].get("/Subtype") == "/Image":
+                    image_data = x_object[obj].get_data()
+                    image_array = np.frombuffer(image_data, dtype=np.uint8)
+                    average_luminance = image_array.mean()
+
+        # إذا كان متوسط النصوع عالياً بما يكفي والنص فارغ، نعتبر الصفحة بيضاء
+        if len(text) == 0 and average_luminance > 245:
+            # إغلاق الوثيقة الحالية إذا وجدت
+            if current_writer is not None:
+                writers.append(current_writer)
+                current_writer = None
+            continue
+
+        # إذا كانت هناك دعوى، البدء أو إضافة الصفحة إلى الوثيقة
+        if current_writer is None:
+            current_writer = PyPDF2.PdfWriter()
+        current_writer.add_page(page)
+
+    # إضافة الوثيقة الأخيرة إذا وجدت
+    if current_writer is not None:
+        writers.append(current_writer)
+
+    # حفظ الملفات المؤقتة
+    for idx, writer in enumerate(writers):
+        doc_name = f"document_{idx + 1}.pdf"
+        with open(doc_name, "wb") as f:
+            writer.write(f)
+        output_files.append(doc_name)
+
+    return output_files
+
+# إنشاء واجهة Streamlit
+st.title("PDF Splitter by Blank Page")
+uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+
+if uploaded_file is not None:
+    st.write("Processing...")
+    output_files = split_pdf(uploaded_file)
+
+    for output_file in output_files:
+        with open(output_file, "rb") as f:
+            st.download_button(
+                label=f"Download {output_file}",
+                data=f,
+                file_name=output_file,
+                mime="application/pdf"
+            )
+
+    st.success("PDF splitting completed successfully!")
