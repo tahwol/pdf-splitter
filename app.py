@@ -76,24 +76,22 @@ if uploaded_file is not None:
     page_ranges = []
     start_page = 1
 
-    while True:
+    add_more = True
+    while add_more and start_page <= total_pages:
         col1, col2, col3 = st.columns([1, 1, 2])
         with col1:
-            start_page = st.number_input(f"من صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key=f"start_{len(page_ranges)}")
+            start_page_input = st.number_input(f"من صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key=f"start_{len(page_ranges)}")
         with col2:
-            end_page = st.number_input(f"إلى صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key=f"end_{len(page_ranges)}")
+            end_page = st.number_input(f"إلى صفحة رقم", min_value=start_page_input, max_value=total_pages, step=1, key=f"end_{len(page_ranges)}")
         with col3:
             doc_name = st.text_input(f"اسم المستند (اختياري)", key=f"name_{len(page_ranges)}")
-        page_ranges.append((start_page - 1, end_page - 1, doc_name))
+        page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
 
-        if st.button('إضافة مستند', key=f"add_{len(page_ranges)}"):
-            if end_page < total_pages:
-                start_page = end_page + 1
-            else:
-                break
-
-        if start_page > total_pages:
-            break
+        if end_page < total_pages:
+            start_page = end_page + 1
+            add_more = st.button('إضافة مستند', key=f"add_{len(page_ranges)}")
+        else:
+            add_more = False
 
     # Button to start splitting process
     if st.button('تحويل الآن'):
@@ -143,4 +141,8 @@ if uploaded_file is not None:
 
     # Button to upload a new file
     if st.button('رفع ملف جديد'):
+        st.warning("تأكد من تحميل الملف المقسم قبل رفع ملف جديد.")
+        # Delete the old file and reset the app
+        if os.path.exists(zip_filename):
+            os.remove(zip_filename)
         st.experimental_rerun()
