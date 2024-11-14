@@ -4,8 +4,8 @@ import streamlit as st
 import zipfile
 
 # Function to split PDF based on user-defined page numbers
-def split_pdf_by_pages(pdf, page_counts, output_folder):
-    document = fitz.open(stream=pdf.read(), filetype="pdf")
+def split_pdf_by_pages(pdf_data, page_counts, output_folder):
+    document = fitz.open(stream=pdf_data, filetype="pdf")
     output_files = []
     start_page = 0
 
@@ -30,6 +30,10 @@ st.title("PDF Splitter by Page Counts - by: Samir Hettawy")
 uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
 if uploaded_file is not None:
+    # قراءة محتوى الملف مرة واحدة وحفظه في متغير
+    pdf_data = uploaded_file.read()
+    document = fitz.open(stream=pdf_data, filetype="pdf")
+
     # Display instructions
     st.write("Enter the number of pages for each split separated by commas (e.g., 2, 3, 5, 10...)")
     
@@ -41,8 +45,7 @@ if uploaded_file is not None:
         page_counts = [int(x.strip()) for x in page_counts_input.split(",") if x.strip().isdigit()]
         total_pages = sum(page_counts)
 
-        # Load the document and check if total pages match
-        document = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+        # Check if total pages match
         if total_pages != document.page_count:
             st.error(f"Total pages in the split ({total_pages}) does not match the document's total pages ({document.page_count}). Please adjust the counts.")
         else:
@@ -51,7 +54,7 @@ if uploaded_file is not None:
             os.makedirs(output_folder, exist_ok=True)
 
             # Split PDF based on user-defined page counts
-            output_files = split_pdf_by_pages(uploaded_file, page_counts, output_folder)
+            output_files = split_pdf_by_pages(pdf_data, page_counts, output_folder)
 
             # Create a ZIP file to compress the output files
             zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
