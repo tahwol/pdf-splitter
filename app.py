@@ -60,7 +60,7 @@ st.markdown("<div class='sub-title' style='font-size: 10px;'>برمجة: الم�
 
 # Display usage instructions
 st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>", unsafe_allow_html=True)
-st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك من خلال إدخال النطاقات. يجب أن تُحدد نطاق كل مستند بإدخال الصفحات من وإلى. إذا لم يكن هناك توافق بين إجمالي عدد الصفحات وإجمالي النطاقات المحددة، ستظهر رسالة خطأ.</div>", unsafe_allow_html=True)
+st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك من خلال تحميل ملف Excel يحتوي على النطاقات. يجب أن يُحدد نطاق كل مستند بإدخال الصفحات من وإلى. إذا لم يكن هناك توافق بين إجمالي عدد الصفحات وإجمالي النطاقات المحددة، ستظهر رسالة خطأ.</div>", unsafe_allow_html=True)
 
 # Upload PDF file
 uploaded_file = st.file_uploader("ارفع ملف PDF", type=["pdf"])
@@ -72,64 +72,71 @@ if uploaded_file is not None:
     document = fitz.open(stream=pdf_data, filetype="pdf")
     total_pages = len(document)
 
-    # User input for custom page ranges
-    page_ranges_input = st.text_area("أدخل نطاقات الصفحات (مثال: من صفحة 1 إلى صفحة 4، من صفحة 5 إلى صفحة 10)")
+    # Upload Excel file for custom page ranges
+    excel_file = st.file_uploader("ارفع ملف Excel يحتوي على نطاقات الصفحات", type=["xlsx"])
 
-    # Button to start splitting process
-    if st.button('تحويل الآن'):
+    # Check if Excel file is uploaded
+    if excel_file is not None:
         try:
-            # Parse input to extract ranges
-            ranges = []
-            total_selected_pages = 0
+            # Read Excel file
+            df = pd.read_excel(excel_file)
 
-            for line in page_ranges_input.splitlines():
-                if 'إلى' in line:
-                    parts = line.split('إلى')
-                    start_page = int(parts[0].replace('من صفحة', '').strip()) - 1
-                    end_page = int(parts[1].strip()) - 1
-
-                    # Validate the ranges
-                    if start_page < 0 or end_page >= total_pages or start_page > end_page:
-                        st.error(f"المدى المدخل غير صالح: {line}")
-                        break
-                    
-                    total_selected_pages += (end_page - start_page + 1)
-                    ranges.append((start_page, end_page, None))
-
-            # Check if the total selected pages match the total pages in the document
-            if total_selected_pages != total_pages:
-                st.error("إجمالي الصفحات المحددة لا يتوافق مع إجمالي عدد صفحات الملف.")
+            # Validate required columns
+            if not {'من صفحة (إجباري)', 'إلى صفحة (إجباري)'}.issubset(df.columns):
+                st.error("ملف Excel يجب أن يحتوي على الأعمدة التالية: 'من صفحة (إجباري)', 'إلى صفحة (إجباري)'")
             else:
-                # Create output folder
-                output_folder = "E:\\الملفات_المقسمة"
-                os.makedirs(output_folder, exist_ok=True)
+                # Parse input to extract ranges
+                ranges = []
+                total_selected_pages = 0
 
-                # Split PDF based on custom ranges
-                output_files = split_pdf_custom_ranges(pdf_data, ranges, output_folder)
+                for _, row in df.iterrows():
+                    if pd.notna(row['من صفحة (إجباري)']) and pd.notna(row['إلى صفحة (إجباري)']):
+                        start_page = int(row['من صفحة (إجباري)']) - 1
+                        end_page = int(row['إلى صفحة (إجباري)']) - 1
 
-                # Create a ZIP file to compress the output files
-                zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
-                with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                        # Validate the ranges
+                        if start_page < 0 or end_page >= total_pages or start_page > end_page:
+                            st.error(f"المدى المدخل غير صالح: من صفحة {row['من صفحة (إجباري)']} إلى صفحة {row['إلى صفحة (إجباري)']}")
+                            break
+
+                        total_selected_pages += (end_page - start_page + 1)
+                        doc_name = row['اسم الملف (اختياري)'] if 'اسم الملف (اختياري)' in df.columns and pd.notna(row['اسم الملف (اختياري)']) else None
+                        ranges.append((start_page, end_page, doc_name))
+
+                # Check if the total selected pages match the total pages in the document
+                if total_selected_pages != total_pages:
+                    st.error("إجمالي الصفحات المحددة لا يتوافق مع إجمالي عدد صفحات الملف.")
+                else:
+                    # Create output folder
+                    output_folder = "E:\\الملفات_المقسمة"
+                    os.makedirs(output_folder, exist_ok=True)
+
+                    # Split PDF based on custom ranges
+                    output_files = split_pdf_custom_ranges(pdf_data, ranges, output_folder)
+
+                    # Create a ZIP file to compress the output files
+                    zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
+                    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                        for file in output_files:
+                            zipf.write(file, os.path.basename(file))
+
+                    # Delete individual PDF files after adding them to ZIP
                     for file in output_files:
-                        zipf.write(file, os.path.basename(file))
+                        os.remove(file)
 
-                # Delete individual PDF files after adding them to ZIP
-                for file in output_files:
-                    os.remove(file)
+                    # Provide download button for the ZIP file
+                    with open(zip_filename, "rb") as f:
+                        st.download_button(
+                            label="تحميل الكل كملف ZIP",
+                            data=f,
+                            file_name=os.path.basename(zip_filename),
+                            mime="application/zip"
+                        )
 
-                # Provide download button for the ZIP file
-                with open(zip_filename, "rb") as f:
-                    st.download_button(
-                        label="تحميل الكل كملف ZIP",
-                        data=f,
-                        file_name=os.path.basename(zip_filename),
-                        mime="application/zip"
-                    )
-
-                st.success("تم تقسيم الملفات بنجاح وتحويلها إلى ملف مضغوط!")
+                    st.success("تم تقسيم الملفات بنجاح وتحويلها إلى ملف مضغوط!")
 
         except ValueError:
-            st.error("الرجاء التأكد من صحة التنسيق المدخل.")
+            st.error("الرجاء التأكد من صحة التنسيق المدخل في ملف Excel.")
 
     # Button to upload a new file
     if st.button('رفع ملف جديد'):
