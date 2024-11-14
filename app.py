@@ -89,8 +89,8 @@ if uploaded_file is not None:
         with col3:
             doc_name = st.text_input(f"اسم المستند (اختياري)", key=f"name_{len(page_ranges)}")
 
-        if st.button('إضافة مستند', key=f"add_{len(page_ranges)}"):
-    page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
+            if st.button('إضافة مستند', key=f"add_{len(page_ranges)}"):
+        page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
     st.session_state.page_ranges = page_ranges
     st.session_state.start_page = end_page + 1
             
