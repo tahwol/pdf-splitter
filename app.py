@@ -59,7 +59,7 @@ st.markdown("<div class='sub-title' style='font-size: 10px;'>برمجة: الم�
 
 # Display usage instructions
 st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>", unsafe_allow_html=True)
-st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك من خلال إدخال النطاقات. يجب أن تُحدد نطاق كل مستند بإدخال الصفحات من وإلى. إذا لم يكن هناك توافق بين إجمالي عدد الصفحات وإجمالي النطاقات المحددة، ستظهر رسالة خطأ.</div>", unsafe_allow_html=True)
+st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك من خلال إدخال المستندات. يجب أن تُحدد نطاق كل مستند بإدخال الصفحات من وإلى. إذا لم يكن هناك توافق بين إجمالي عدد الصفحات وإجمالي النطاقات المحددة، ستظهر رسالة خطأ.</div>", unsafe_allow_html=True)
 
 # Upload PDF file
 uploaded_file = st.file_uploader("ارفع ملف PDF", type=["pdf"])
@@ -74,17 +74,26 @@ if uploaded_file is not None:
     # Input for custom page ranges
     st.markdown("<h4>أدخل نطاقات الصفحات لتقسيم الملف:</h4>", unsafe_allow_html=True)
     page_ranges = []
-    num_ranges = st.number_input("عدد النطاقات التي تريد تقسيم الملف إليها:", min_value=1, max_value=total_pages, step=1, value=1)
+    start_page = 1
 
-    for i in range(num_ranges):
+    while True:
         col1, col2, col3 = st.columns([1, 1, 2])
         with col1:
-            start_page = st.number_input(f"من صفحة (نطاق {i+1})", min_value=1, max_value=total_pages, step=1, key=f"start_{i}")
+            start_page = st.number_input(f"من صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key=f"start_{len(page_ranges)}")
         with col2:
-            end_page = st.number_input(f"إلى صفحة (نطاق {i+1})", min_value=start_page, max_value=total_pages, step=1, key=f"end_{i}")
+            end_page = st.number_input(f"إلى صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key=f"end_{len(page_ranges)}")
         with col3:
-            doc_name = st.text_input(f"اسم الملف (اختياري - نطاق {i+1})", key=f"name_{i}")
+            doc_name = st.text_input(f"اسم المستند (اختياري)", key=f"name_{len(page_ranges)}")
         page_ranges.append((start_page - 1, end_page - 1, doc_name))
+
+        if st.button('إضافة مستند', key=f"add_{len(page_ranges)}"):
+            if end_page < total_pages:
+                start_page = end_page + 1
+            else:
+                break
+
+        if start_page > total_pages:
+            break
 
     # Button to start splitting process
     if st.button('تحويل الآن'):
