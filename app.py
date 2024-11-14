@@ -75,10 +75,10 @@ if uploaded_file is not None:
     st.markdown("<h4>أدخل نطاقات الصفحات لتقسيم الملف:</h4>", unsafe_allow_html=True)
     if 'page_ranges' not in st.session_state:
         st.session_state.page_ranges = []
-        st.session_state.start_page = 1
+        st.session_state.start_page = None
 
     page_ranges = st.session_state.page_ranges
-    start_page = st.session_state.start_page
+    start_page = st.session_state.start_page if st.session_state.start_page else 1
 
     if start_page <= total_pages:
         col1, col2, col3 = st.columns([1, 1, 2])
@@ -133,3 +133,7 @@ if uploaded_file is not None:
 
         except ValueError:
             st.error("الرجاء التأكد من صحة التنسيق المدخل.")
+
+    # Clear session state to remove uploaded file
+    st.session_state.page_ranges = []
+    st.session_state.start_page = None
