@@ -39,7 +39,6 @@ def split_pdf_custom_ranges(pdf_data, ranges, output_folder):
 
 # Streamlit Interface
 st.set_page_config(page_title="تقسيم ملفات PDF - برمجة: المستشار سمير عبد العظيم حيطاوي", layout="centered")
-st.title("تقسيم ملفات PDF - برمجة: المستشار سمير عبد العظيم حيطاوي")
 
 # Set styles for the app
 st.markdown(
@@ -55,10 +54,28 @@ st.markdown(
         font-size: large;
         color: #000080;
     }
+    .main-title {
+        font-size: 36px;
+        font-weight: bold;
+        color: #000000;
+        text-align: center;
+    }
+    .sub-title {
+        font-size: 20px;
+        color: #B22222;
+        text-align: center;
+    }
     </style>
     """,
     unsafe_allow_html=True
 )
+
+# Titles
+st.markdown("<div class='main-title'>تقسيم ملفات PDF</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title'>برمجة: المستشار سمير عبد العظيم حيطاوي</div>", unsafe_allow_html=True)
+
+# Display usage instructions
+st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك: تقسيم كل ورقة في ملف منفصل أو تقسيم إلى ملفات تحتوي على نطاق من الصفحات.</div>", unsafe_allow_html=True)
 
 # Upload PDF file
 uploaded_file = st.file_uploader("ارفع ملف PDF", type=["pdf"])
@@ -68,9 +85,6 @@ if uploaded_file is not None:
     # Read file data
     pdf_data = uploaded_file.read()
     document = fitz.open(stream=pdf_data, filetype="pdf")
-    
-    # Display instructions
-    st.markdown("<div class='instruction'>حدد كيف ترغب في تقسيم الملف:</div>", unsafe_allow_html=True)
     
     # Option selection
     split_option = st.radio("اختر طريقة التقسيم:", ("تقسيم المستند إلى ملفات فردية (كل ورقة على حدة)", "تقسيم المستند إلى ملفات متعددة تحتوي على أكثر من ورقة"))
