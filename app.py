@@ -102,6 +102,7 @@ if uploaded_file is not None:
             page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
             st.session_state.page_ranges = page_ranges
             st.session_state.start_page = end_page + 1
+            st.experimental_rerun()
 
     # Display the added page ranges
     if page_ranges:
