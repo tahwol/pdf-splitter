@@ -21,7 +21,7 @@ def split_pdf_custom_ranges(pdf_data, ranges, output_folder):
     return output_files
 
 # Streamlit Interface
-st.set_page_config(page_title="تقسيم ملفات PDF - برمجة: المستشار سمير عبد العظيم حيطاوي", layout="centered")
+st.set_page_config(page_title="تقسيم ملفات PDF - تصميم: المستشار سمير عبد العظيم حيطاوي", layout="centered")
 
 # Set styles for the app
 st.markdown(
@@ -55,7 +55,7 @@ st.markdown(
 
 # Titles
 st.markdown("<div class='main-title'>تقسيم ملفات PDF</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title' style='font-size: 10px;'>برمجة: المستشار سمير عبد العظيم حيطاوي</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title' style='font-size: 10px;'>تصميم: المستشار سمير عبد العظيم حيطاوي</div>", unsafe_allow_html=True)
 
 # Display usage instructions
 st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>", unsafe_allow_html=True)
@@ -93,7 +93,6 @@ if uploaded_file is not None:
             page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
             st.session_state.page_ranges = page_ranges
             st.session_state.start_page = end_page + 1
-            st.experimental_rerun()
 
     # Button to start splitting process
     if st.button('تحويل الآن'):
@@ -111,7 +110,7 @@ if uploaded_file is not None:
                 st.error("إجمالي الصفحات المحددة لا يتوافق مع إجمالي عدد صفحات الملف.")
             else:
                 # Create output folder
-                output_folder = "E:\\الملفات_المقسمة"
+                output_folder = "E:\الملفات_المقسمة"
                 os.makedirs(output_folder, exist_ok=True)
 
                 # Split PDF based on custom ranges
