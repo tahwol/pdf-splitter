@@ -80,41 +80,39 @@ if uploaded_file is not None:
     page_ranges = st.session_state.page_ranges
     start_page = st.session_state.start_page
 
-    
     if start_page <= total_pages:
         col1, col2, col3 = st.columns([1, 1, 2])
-    with col1:
-        start_page_input = st.number_input("من صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key="start_input")
-    with col2:
-        end_page = st.number_input("إلى صفحة رقم", min_value=start_page_input, max_value=total_pages, step=1, key="end_input")
-    with col3:
-        doc_name = st.text_input("اسم المستند (اختياري)", value=st.session_state.get('doc_name', ''), key="name_input")
-    if st.button('إضافة مستند', key="add_button"):
-        page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
-        st.session_state.page_ranges = page_ranges
-        st.session_state.start_page = end_page + 1
-        st.session_state.doc_name = ""
-        st.experimental_rerun()
+        with col1:
+            start_page_input = st.number_input("من صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key="start_input")
+        with col2:
+            end_page = st.number_input("إلى صفحة رقم", min_value=start_page_input, max_value=total_pages, step=1, key="end_input")
+        with col3:
+            doc_name = st.text_input("اسم المستند (اختياري)", value=st.session_state.get('doc_name', ''), key="name_input")
+        if st.button('إضافة مستند', key="add_button"):
+            page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
+            st.session_state.page_ranges = page_ranges
+            st.session_state.start_page = end_page + 1
+            st.session_state.doc_name = ""
+            st.experimental_rerun()
 
     # Display the added page ranges
     if page_ranges:
         st.markdown("### المستندات المضافة:")
-        
-    for idx, (start, end, name) in enumerate(page_ranges):
-        col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
-    with col1:
-        st.write(f"{idx + 1}. من صفحة {start + 1} إلى صفحة {end + 1} - {name if name else 'بدون اسم'}")
-    with col2:
-        if st.button('تعديل', key=f"edit_{idx}"):
-            st.session_state.edit_index = idx
-            st.session_state.start_page = start + 1
-            st.session_state.end_page = end + 1
-            st.session_state.doc_name = name
-    with col3:
-        if st.button('حذف', key=f"delete_{idx}"):
-            del page_ranges[idx]
-            st.session_state.page_ranges = page_ranges
-            st.experimental_rerun()
+        for idx, (start, end, name) in enumerate(page_ranges):
+            col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+            with col1:
+                st.write(f"{idx + 1}. من صفحة {start + 1} إلى صفحة {end + 1} - {name if name else 'بدون اسم'}")
+            with col2:
+                if st.button('تعديل', key=f"edit_{idx}"):
+                    st.session_state.edit_index = idx
+                    st.session_state.start_page = start + 1
+                    st.session_state.end_page = end + 1
+                    st.session_state.doc_name = name
+            with col3:
+                if st.button('حذف', key=f"delete_{idx}"):
+                    del page_ranges[idx]
+                    st.session_state.page_ranges = page_ranges
+                    st.experimental_rerun()
 
     # Button to start splitting process
     if st.button('تحويل الآن'):
@@ -152,11 +150,9 @@ if uploaded_file is not None:
 
     # Button to upload a new file
     if st.button('رفع ملف جديد'):
-                # Delete the old file and reset the app
+        # Delete the old file and reset the app
         if 'zip_filename' in locals() and os.path.exists(zip_filename):
             os.remove(zip_filename)
-        st.session_state.page_ranges = []
-        st.session_state.start_page = 1
         st.session_state.page_ranges = []
         st.session_state.start_page = 1
         st.experimental_rerun()
