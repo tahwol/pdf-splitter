@@ -1,83 +1,75 @@
 import fitz  # PyMuPDF
 import os
 import streamlit as st
-import pytesseract
-from PIL import Image
 import zipfile
 
-# Function to split PDF based on specific separator text
-def split_pdf_with_specific_text(pdf, output_folder):
+# Function to split PDF based on user-defined page numbers
+def split_pdf_by_pages(pdf, page_counts, output_folder):
     document = fitz.open(stream=pdf.read(), filetype="pdf")
-
-    current_document = None
-    documents = []
     output_files = []
+    start_page = 0
 
-    for page_number in range(len(document)):
-        page = document.load_page(page_number)
-
-        # Convert page to image for OCR
-        pix = page.get_pixmap()
-        image = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-
-        # Use OCR to extract text from the image
-        ocr_text = pytesseract.image_to_string(image).strip()
-
-        # Check if the specific separator text is present
-        if "warakafaselasamirhetawy" in ocr_text:
-            # If current document exists, add it to the list and reset
-            if current_document is not None:
-                documents.append(current_document)
-                current_document = None
-            continue
-
-        # Start or add the page to the current document
-        if current_document is None:
-            current_document = fitz.open()  # Create a new document
-        current_document.insert_pdf(document, from_page=page_number, to_page=page_number)
-
-    # Add the last document if any
-    if current_document is not None:
-        documents.append(current_document)
-
-    # Save individual documents to the desired folder
-    for idx, doc in enumerate(documents):
+    for idx, count in enumerate(page_counts):
+        end_page = start_page + count - 1
+        output_pdf = fitz.open()  # Create a new PDF document
+        output_pdf.insert_pdf(document, from_page=start_page, to_page=end_page)
+        
+        # Save the split PDF
         doc_name = os.path.join(output_folder, f"document_{idx + 1}.pdf")
-        doc.save(doc_name)
+        output_pdf.save(doc_name)
         output_files.append(doc_name)
-        doc.close()
+        output_pdf.close()
+        
+        # Update start page for the next segment
+        start_page = end_page + 1
 
     return output_files
 
 # Streamlit Interface
-st.title("PDF Splitter by Specific Text - by: Samir Hettawy")
+st.title("PDF Splitter by Page Counts - by: Samir Hettawy")
 uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
 if uploaded_file is not None:
-    # Define the output folder path as specified
-    output_folder = "E:\\الملفات_المقسمة"
-    os.makedirs(output_folder, exist_ok=True)
+    # Display instructions
+    st.write("Enter the number of pages for each split separated by commas (e.g., 2, 3, 5, 10...)")
+    
+    # User input for split configuration
+    page_counts_input = st.text_input("Page Counts")
+    
+    if page_counts_input:
+        # Convert input to a list of integers
+        page_counts = [int(x.strip()) for x in page_counts_input.split(",") if x.strip().isdigit()]
+        total_pages = sum(page_counts)
 
-    st.write("Processing...")
-    output_files = split_pdf_with_specific_text(uploaded_file, output_folder)
+        # Load the document and check if total pages match
+        document = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+        if total_pages != document.page_count:
+            st.error(f"Total pages in the split ({total_pages}) does not match the document's total pages ({document.page_count}). Please adjust the counts.")
+        else:
+            # Create output folder
+            output_folder = "E:\\الملفات_المقسمة"
+            os.makedirs(output_folder, exist_ok=True)
 
-    # Create a ZIP file to compress the output files without extra folders
-    zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
-    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for file in output_files:
-            zipf.write(file, os.path.basename(file))
+            # Split PDF based on user-defined page counts
+            output_files = split_pdf_by_pages(uploaded_file, page_counts, output_folder)
 
-    # Delete individual PDF files after adding them to ZIP
-    for file in output_files:
-        os.remove(file)
+            # Create a ZIP file to compress the output files
+            zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
+            with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file in output_files:
+                    zipf.write(file, os.path.basename(file))
 
-    # Provide download button for the ZIP file
-    with open(zip_filename, "rb") as f:
-        st.download_button(
-            label="Download All as ZIP",
-            data=f,
-            file_name=os.path.basename(zip_filename),
-            mime="application/zip"
-        )
+            # Delete individual PDF files after adding them to ZIP
+            for file in output_files:
+                os.remove(file)
 
-    st.success("PDF splitting and ZIP compression completed successfully!")
+            # Provide download button for the ZIP file
+            with open(zip_filename, "rb") as f:
+                st.download_button(
+                    label="Download All as ZIP",
+                    data=f,
+                    file_name=os.path.basename(zip_filename),
+                    mime="application/zip"
+                )
+
+            st.success("PDF splitting and ZIP compression completed successfully!")
