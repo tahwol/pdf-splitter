@@ -67,8 +67,14 @@ uploaded_file = st.file_uploader("ارفع ملف PDF", type=["pdf"])
 # Check if a file is uploaded
 if uploaded_file is not None:
     # Reset session state for a new file
-    st.session_state.page_ranges = []
-    st.session_state.start_page = 1
+    if 'previous_uploaded_file' in st.session_state:
+        if st.session_state.previous_uploaded_file != uploaded_file.name:
+            st.session_state.page_ranges = []
+            st.session_state.start_page = 1
+    else:
+        st.session_state.page_ranges = []
+        st.session_state.start_page = 1
+    st.session_state.previous_uploaded_file = uploaded_file.name
 
     # Read file data
     pdf_data = uploaded_file.read()
@@ -84,15 +90,15 @@ if uploaded_file is not None:
     page_ranges = st.session_state.page_ranges
     start_page = st.session_state.start_page
 
-    if start_page <= total_pages:
+    while start_page <= total_pages:
         col1, col2, col3 = st.columns([1, 1, 2])
         with col1:
-            start_page_input = st.number_input("من صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key="start_input")
+            start_page_input = st.number_input("من صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key=f"start_input_{start_page}")
         with col2:
-            end_page = st.number_input("إلى صفحة رقم", min_value=start_page_input, max_value=total_pages, step=1, key="end_input")
+            end_page = st.number_input("إلى صفحة رقم", min_value=start_page_input, max_value=total_pages, step=1, key=f"end_input_{start_page}")
         with col3:
-            doc_name = st.text_input("اسم المستند (اختياري)", value="", key="name_input")
-        if st.button('إضافة مستند', key="add_button"):
+            doc_name = st.text_input("اسم المستند (اختياري)", value="", key=f"name_input_{start_page}")
+        if st.button('إضافة مستند', key=f"add_button_{start_page}"):
             page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
             st.session_state.page_ranges = page_ranges
             st.session_state.start_page = end_page + 1
