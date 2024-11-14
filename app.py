@@ -97,43 +97,33 @@ if uploaded_file is not None:
     # Button to start splitting process
     if st.button('تحويل الآن'):
         try:
-            # Validate ranges and calculate total selected pages
-            total_selected_pages = 0
-            for start_page, end_page, _ in page_ranges:
-                if start_page < 0 or end_page >= total_pages or start_page > end_page:
-                    st.error(f"المدى المدخل غير صالح: من صفحة {start_page + 1} إلى صفحة {end_page + 1}")
-                    break
-                total_selected_pages += (end_page - start_page + 1)
+            # Create output folder
+            output_folder = "E:\الملفات_المقسمة"
+            os.makedirs(output_folder, exist_ok=True)
 
-            # Check if the total selected pages match the total pages in the document
-                        else:
-                # Create output folder
-                output_folder = "E:\الملفات_المقسمة"
-                os.makedirs(output_folder, exist_ok=True)
+            # Split PDF based on custom ranges
+            output_files = split_pdf_custom_ranges(pdf_data, page_ranges, output_folder)
 
-                # Split PDF based on custom ranges
-                output_files = split_pdf_custom_ranges(pdf_data, page_ranges, output_folder)
-
-                # Create a ZIP file to compress the output files
-                zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
-                with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    for file in output_files:
-                        zipf.write(file, os.path.basename(file))
-
-                # Delete individual PDF files after adding them to ZIP
+            # Create a ZIP file to compress the output files
+            zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
+            with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
                 for file in output_files:
-                    os.remove(file)
+                    zipf.write(file, os.path.basename(file))
 
-                # Provide download button for the ZIP file
-                with open(zip_filename, "rb") as f:
-                    st.download_button(
-                        label="تحميل الكل كملف ZIP",
-                        data=f,
-                        file_name=os.path.basename(zip_filename),
-                        mime="application/zip"
-                    )
+            # Delete individual PDF files after adding them to ZIP
+            for file in output_files:
+                os.remove(file)
 
-                st.success("تم تقسيم الملفات بنجاح وتحويلها إلى ملف مضغوط!")
+            # Provide download button for the ZIP file
+            with open(zip_filename, "rb") as f:
+                st.download_button(
+                    label="تحميل الكل كملف ZIP",
+                    data=f,
+                    file_name=os.path.basename(zip_filename),
+                    mime="application/zip"
+                )
+
+            st.success("تم تقسيم الملفات بنجاح وتحويلها إلى ملف مضغوط!")
 
         except ValueError:
             st.error("الرجاء التأكد من صحة التنسيق المدخل.")
