@@ -75,10 +75,10 @@ if uploaded_file is not None:
     st.markdown("<h4>أدخل نطاقات الصفحات لتقسيم الملف:</h4>", unsafe_allow_html=True)
     if 'page_ranges' not in st.session_state:
         st.session_state.page_ranges = []
-        st.session_state.start_page = None
+        st.session_state.start_page = 1
 
     page_ranges = st.session_state.page_ranges
-    start_page = st.session_state.start_page if st.session_state.start_page else 1
+    start_page = st.session_state.start_page
 
     if start_page <= total_pages:
         col1, col2, col3 = st.columns([1, 1, 2])
@@ -87,12 +87,11 @@ if uploaded_file is not None:
         with col2:
             end_page = st.number_input("إلى صفحة رقم", min_value=start_page_input, max_value=total_pages, step=1, key="end_input")
         with col3:
-            doc_name = st.text_input("اسم المستند (اختياري)", value=st.session_state.get('doc_name', ''), key="name_input")
+            doc_name = st.text_input("اسم المستند (اختياري)", value="", key="name_input")
         if st.button('إضافة مستند', key="add_button"):
             page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
             st.session_state.page_ranges = page_ranges
             st.session_state.start_page = end_page + 1
-            st.session_state.doc_name = ""
 
     # Display the added page ranges
     if page_ranges:
@@ -103,29 +102,25 @@ if uploaded_file is not None:
     # Button to start splitting process
     if st.button('تحويل الآن'):
         try:
-            # Create output folder
-            output_folder = "E:\الملفات_المقسمة"
+            # Create output folder in a temporary directory
+            output_folder = "output_files"
             os.makedirs(output_folder, exist_ok=True)
 
             # Split PDF based on custom ranges
             output_files = split_pdf_custom_ranges(pdf_data, page_ranges, output_folder)
 
             # Create a ZIP file to compress the output files
-            zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
+            zip_filename = f"{uploaded_file.name.replace('.pdf', '')}.zip"
             with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
                 for file in output_files:
                     zipf.write(file, os.path.basename(file))
-
-            # Delete individual PDF files after adding them to ZIP
-            for file in output_files:
-                os.remove(file)
 
             # Provide download button for the ZIP file
             with open(zip_filename, "rb") as f:
                 st.download_button(
                     label="تحميل الكل كملف ZIP",
                     data=f,
-                    file_name=os.path.basename(zip_filename),
+                    file_name=zip_filename,
                     mime="application/zip"
                 )
 
@@ -133,3 +128,10 @@ if uploaded_file is not None:
 
         except ValueError:
             st.error("الرجاء التأكد من صحة التنسيق المدخل.")
+
+        finally:
+            # Clean up output files
+            for file in output_files:
+                os.remove(file)
+            if os.path.exists(zip_filename):
+                os.remove(zip_filename)
