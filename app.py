@@ -75,7 +75,7 @@ st.markdown("<div class='main-title'>تقسيم ملفات PDF</div>", unsafe_al
 st.markdown("<div class='sub-title' style='font-size: 10px;'>برمجة: المستشار سمير عبد العظيم حيطاوي</div>", unsafe_allow_html=True)
 
 # Display usage instructions
-st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>>
+st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>"
 <div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك: تقسيم كل ورقة في ملف منفصل أو تقسيم إلى ملفات تحتوي على نطاق من الصفحات.</div>", unsafe_allow_html=True)
 
 # Upload PDF file
