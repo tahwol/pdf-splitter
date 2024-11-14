@@ -93,6 +93,13 @@ if uploaded_file is not None:
             page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
             st.session_state.page_ranges = page_ranges
             st.session_state.start_page = end_page + 1
+            st.experimental_rerun()
+
+    # Display the added page ranges
+    if page_ranges:
+        st.markdown("### المستندات المضافة:")
+        for idx, (start, end, name) in enumerate(page_ranges):
+            st.write(f"{idx + 1}. من صفحة {start + 1} إلى صفحة {end + 1} - {name if name else 'بدون اسم'}")
 
     # Button to start splitting process
     if st.button('تحويل الآن'):
