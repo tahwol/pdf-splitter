@@ -89,8 +89,7 @@ if uploaded_file is not None:
 
         if end_page < total_pages:
             start_page = end_page + 1
-            if st.button('إضافة مستند', key=f"add_{len(page_ranges)}"):
-                add_more = True
+            add_more = st.button('إضافة مستند', key=f"add_{len(page_ranges)}")
         else:
             add_more = False
 
