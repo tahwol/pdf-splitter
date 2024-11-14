@@ -99,6 +99,14 @@ if uploaded_file is not None:
         st.markdown("### المستندات المضافة:")
         for idx, (start, end, name) in enumerate(page_ranges):
             st.write(f"{idx + 1}. من صفحة {start + 1} إلى صفحة {end + 1} - {name if name else 'بدون اسم'}")
+            col_edit, col_delete = st.columns([1, 1])
+            with col_edit:
+                if st.button(f"تعديل", key=f"edit_{idx}"):
+                    st.session_state.start_page = start + 1
+                    st.session_state.page_ranges.pop(idx)
+            with col_delete:
+                if st.button(f"حذف", key=f"delete_{idx}"):
+                    st.session_state.page_ranges.pop(idx)
 
     # Button to start splitting process
     if st.button('تحويل الآن'):
