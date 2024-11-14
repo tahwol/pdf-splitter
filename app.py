@@ -104,9 +104,12 @@ if uploaded_file is not None:
                 if st.button(f"تعديل", key=f"edit_{idx}"):
                     st.session_state.start_page = start + 1
                     st.session_state.page_ranges.pop(idx)
+                    st.session_state.doc_name = name
+                    st.experimental_rerun()
             with col_delete:
                 if st.button(f"حذف", key=f"delete_{idx}"):
                     st.session_state.page_ranges.pop(idx)
+                    st.experimental_rerun()
 
     # Button to start splitting process
     if st.button('تحويل الآن'):
@@ -149,3 +152,4 @@ if uploaded_file is not None:
             os.remove(zip_filename)
         st.session_state.page_ranges = []
         st.session_state.start_page = 1
+        st.experimental_rerun()
