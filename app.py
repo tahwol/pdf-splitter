@@ -80,7 +80,6 @@ if uploaded_file is not None:
     page_ranges = st.session_state.page_ranges
     start_page = st.session_state.start_page
 
-    add_more = True
     if start_page <= total_pages:
         col1, col2, col3 = st.columns([1, 1, 2])
         with col1:
@@ -94,6 +93,7 @@ if uploaded_file is not None:
             page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
             st.session_state.page_ranges = page_ranges
             st.session_state.start_page = end_page + 1
+            st.experimental_rerun()
 
     # Button to start splitting process
     if st.button('تحويل الآن'):
@@ -145,7 +145,7 @@ if uploaded_file is not None:
     if st.button('رفع ملف جديد'):
         st.warning("تأكد من تحميل الملف المقسم قبل رفع ملف جديد.")
         # Delete the old file and reset the app
-        if os.path.exists(zip_filename):
+        if 'zip_filename' in locals() and os.path.exists(zip_filename):
             os.remove(zip_filename)
         st.session_state.page_ranges = []
         st.session_state.start_page = 1
