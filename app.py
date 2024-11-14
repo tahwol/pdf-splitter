@@ -28,7 +28,7 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-color: #F0F8FF;
+        /* Remove the custom background color to support dark mode */
     }
     .stTitle, .stHeader {
         color: #B22222;
@@ -141,15 +141,7 @@ if uploaded_file is not None:
                 )
 
             st.success("تم تقسيم الملفات بنجاح وتحويلها إلى ملف مضغوط!")
+            st.info("تم تحميل الملف بنجاح! للبدء في تقسيم ملف جديد، يُرجى إعادة تحميل الصفحة.")
 
         except ValueError:
             st.error("الرجاء التأكد من صحة التنسيق المدخل.")
-
-    # Button to upload a new file
-    if st.button('رفع ملف جديد'):
-        # Delete the old file and reset the app
-        if 'zip_filename' in locals() and os.path.exists(zip_filename):
-            os.remove(zip_filename)
-        st.session_state.page_ranges = []
-        st.session_state.start_page = 1
-        st.experimental_rerun()
