@@ -3,76 +3,160 @@ import os
 import streamlit as st
 import zipfile
 
-# Function to split PDF based on user-defined page numbers
-def split_pdf_by_pages(pdf_data, page_counts, output_folder):
+# Function to split PDF into individual pages
+def split_pdf_individual_pages(pdf_data, output_folder):
     document = fitz.open(stream=pdf_data, filetype="pdf")
     output_files = []
-    start_page = 0
 
-    for idx, count in enumerate(page_counts):
-        end_page = start_page + count - 1
+    for page_number in range(len(document)):
+        output_pdf = fitz.open()  # Create a new PDF document
+        output_pdf.insert_pdf(document, from_page=page_number, to_page=page_number)
+
+        # Save each page as a separate PDF
+        doc_name = os.path.join(output_folder, f"document_{page_number + 1}.pdf")
+        output_pdf.save(doc_name)
+        output_files.append(doc_name)
+        output_pdf.close()
+
+    return output_files
+
+# Function to split PDF based on custom ranges
+def split_pdf_custom_ranges(pdf_data, ranges, output_folder):
+    document = fitz.open(stream=pdf_data, filetype="pdf")
+    output_files = []
+
+    for idx, (start_page, end_page) in enumerate(ranges):
         output_pdf = fitz.open()  # Create a new PDF document
         output_pdf.insert_pdf(document, from_page=start_page, to_page=end_page)
-        
+
         # Save the split PDF
         doc_name = os.path.join(output_folder, f"document_{idx + 1}.pdf")
         output_pdf.save(doc_name)
         output_files.append(doc_name)
         output_pdf.close()
-        
-        # Update start page for the next segment
-        start_page = end_page + 1
 
     return output_files
 
 # Streamlit Interface
-st.title("PDF Splitter by Page Counts - by: Samir Hettawy")
-uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+st.set_page_config(page_title="تقسيم ملفات PDF - برمجة: المستشار سمير عبد العظيم حيطاوي", layout="centered")
+st.title("تقسيم ملفات PDF - برمجة: المستشار سمير عبد العظيم حيطاوي")
 
+# Set styles for the app
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #F0F8FF;
+    }
+    .stTitle, .stHeader {
+        color: #B22222;
+    }
+    .instruction {
+        font-size: large;
+        color: #000080;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Upload PDF file
+uploaded_file = st.file_uploader("ارفع ملف PDF", type=["pdf"])
+
+# Check if a file is uploaded
 if uploaded_file is not None:
-    # قراءة محتوى الملف مرة واحدة وحفظه في متغير
+    # Read file data
     pdf_data = uploaded_file.read()
     document = fitz.open(stream=pdf_data, filetype="pdf")
-
+    
     # Display instructions
-    st.write("Enter the number of pages for each split separated by commas (e.g., 2, 3, 5, 10...)")
+    st.markdown("<div class='instruction'>حدد كيف ترغب في تقسيم الملف:</div>", unsafe_allow_html=True)
     
-    # User input for split configuration
-    page_counts_input = st.text_input("Page Counts")
+    # Option selection
+    split_option = st.radio("اختر طريقة التقسيم:", ("تقسيم المستند إلى ملفات فردية (كل ورقة على حدة)", "تقسيم المستند إلى ملفات متعددة تحتوي على أكثر من ورقة"))
     
-    if page_counts_input:
-        # Convert input to a list of integers
-        page_counts = [int(x.strip()) for x in page_counts_input.split(",") if x.strip().isdigit()]
-        total_pages = sum(page_counts)
+    if split_option == "تقسيم المستند إلى ملفات فردية (كل ورقة على حدة)":
+        # Split each page into a separate PDF
+        st.write("سيتم تقسيم المستند إلى ملفات فردية، كل ملف يحتوي على ورقة واحدة.")
+        
+        # Create output folder
+        output_folder = "E:\\الملفات_المقسمة"
+        os.makedirs(output_folder, exist_ok=True)
 
-        # Check if total pages match
-        if total_pages != document.page_count:
-            st.error(f"Total pages in the split ({total_pages}) does not match the document's total pages ({document.page_count}). Please adjust the counts.")
-        else:
-            # Create output folder
-            output_folder = "E:\\الملفات_المقسمة"
-            os.makedirs(output_folder, exist_ok=True)
+        # Split and save files
+        output_files = split_pdf_individual_pages(pdf_data, output_folder)
 
-            # Split PDF based on user-defined page counts
-            output_files = split_pdf_by_pages(pdf_data, page_counts, output_folder)
-
-            # Create a ZIP file to compress the output files
-            zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
-            with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                for file in output_files:
-                    zipf.write(file, os.path.basename(file))
-
-            # Delete individual PDF files after adding them to ZIP
+        # Create a ZIP file to compress the output files
+        zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
+        with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for file in output_files:
-                os.remove(file)
+                zipf.write(file, os.path.basename(file))
 
-            # Provide download button for the ZIP file
-            with open(zip_filename, "rb") as f:
-                st.download_button(
-                    label="Download All as ZIP",
-                    data=f,
-                    file_name=os.path.basename(zip_filename),
-                    mime="application/zip"
-                )
+        # Delete individual PDF files after adding them to ZIP
+        for file in output_files:
+            os.remove(file)
 
-            st.success("PDF splitting and ZIP compression completed successfully!")
+        # Provide download button for the ZIP file
+        with open(zip_filename, "rb") as f:
+            st.download_button(
+                label="تحميل الكل كملف ZIP",
+                data=f,
+                file_name=os.path.basename(zip_filename),
+                mime="application/zip"
+            )
+
+        st.success("تم تقسيم الملفات بنجاح وتحويلها إلى ملف مضغوط!")
+
+    elif split_option == "تقسيم المستند إلى ملفات متعددة تحتوي على أكثر من ورقة":
+        st.write("أدخل تفاصيل تقسيم الملف، مثال: الملف الأول من صفحة 1 إلى 4، الملف الثاني من صفحة 5 إلى 20.")
+        
+        # User input for custom page ranges
+        page_ranges_input = st.text_area("أدخل تفاصيل التقسيم (كل سطر يمثل مدى معين):", "1-4\n5-20")
+        
+        if page_ranges_input:
+            try:
+                # Parse input to extract ranges
+                ranges = []
+                for line in page_ranges_input.splitlines():
+                    if '-' in line:
+                        start, end = line.split('-')
+                        start_page = int(start.strip()) - 1
+                        end_page = int(end.strip()) - 1
+
+                        # Validate the ranges
+                        if start_page < 0 or end_page >= len(document) or start_page > end_page:
+                            st.error(f"المدى المدخل غير صالح: {line}")
+                            break
+                        ranges.append((start_page, end_page))
+                
+                if ranges:
+                    # Create output folder
+                    output_folder = "E:\\الملفات_المقسمة"
+                    os.makedirs(output_folder, exist_ok=True)
+
+                    # Split PDF based on custom ranges
+                    output_files = split_pdf_custom_ranges(pdf_data, ranges, output_folder)
+
+                    # Create a ZIP file to compress the output files
+                    zip_filename = os.path.join(output_folder, uploaded_file.name.replace(".pdf", ".zip"))
+                    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                        for file in output_files:
+                            zipf.write(file, os.path.basename(file))
+
+                    # Delete individual PDF files after adding them to ZIP
+                    for file in output_files:
+                        os.remove(file)
+
+                    # Provide download button for the ZIP file
+                    with open(zip_filename, "rb") as f:
+                        st.download_button(
+                            label="تحميل الكل كملف ZIP",
+                            data=f,
+                            file_name=os.path.basename(zip_filename),
+                            mime="application/zip"
+                        )
+
+                    st.success("تم تقسيم الملفات بنجاح وتحويلها إلى ملف مضغوط!")
+
+            except ValueError:
+                st.error("الرجاء التأكد من صحة التنسيق المدخل.")
