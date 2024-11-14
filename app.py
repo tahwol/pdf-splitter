@@ -66,6 +66,10 @@ uploaded_file = st.file_uploader("ارفع ملف PDF", type=["pdf"])
 
 # Check if a file is uploaded
 if uploaded_file is not None:
+    # Reset session state for a new file
+    st.session_state.page_ranges = []
+    st.session_state.start_page = 1
+
     # Read file data
     pdf_data = uploaded_file.read()
     document = fitz.open(stream=pdf_data, filetype="pdf")
