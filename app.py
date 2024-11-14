@@ -72,10 +72,11 @@ st.markdown(
 
 # Titles
 st.markdown("<div class='main-title'>تقسيم ملفات PDF</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>برمجة: المستشار سمير عبد العظيم حيطاوي</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title' style='font-size: 10px;'>برمجة: المستشار سمير عبد العظيم حيطاوي</div>", unsafe_allow_html=True)
 
 # Display usage instructions
-st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك: تقسيم كل ورقة في ملف منفصل أو تقسيم إلى ملفات تحتوي على نطاق من الصفحات.</div>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>
+<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك: تقسيم كل ورقة في ملف منفصل أو تقسيم إلى ملفات تحتوي على نطاق من الصفحات.</div>", unsafe_allow_html=True)
 
 # Upload PDF file
 uploaded_file = st.file_uploader("ارفع ملف PDF", type=["pdf"])
@@ -112,7 +113,8 @@ if uploaded_file is not None:
 
         # Provide download button for the ZIP file
         with open(zip_filename, "rb") as f:
-            st.download_button(
+            if st.button('تحويل الآن'):
+            
                 label="تحميل الكل كملف ZIP",
                 data=f,
                 file_name=os.path.basename(zip_filename),
@@ -121,27 +123,32 @@ if uploaded_file is not None:
 
         st.success("تم تقسيم الملفات بنجاح وتحويلها إلى ملف مضغوط!")
 
+            st.button('رفع ملف جديد', on_click=lambda: st.experimental_rerun())
+
     elif split_option == "تقسيم المستند إلى ملفات متعددة تحتوي على أكثر من ورقة":
         st.write("أدخل تفاصيل تقسيم الملف، مثال: الملف الأول من صفحة 1 إلى 4، الملف الثاني من صفحة 5 إلى 20.")
         
         # User input for custom page ranges
-        page_ranges_input = st.text_area("أدخل تفاصيل التقسيم (مثال: من صفحة رقم كذا إلى صفحة رقم كذا)", "")
+        page_ranges_input = import pandas as pd
+
+        page_ranges_df = st.experimental_data_editor(
+            pd.DataFrame(columns=['اسم الملف (اختياري)', 'من صفحة (إجباري)', 'إلى صفحة (إجباري)']),
+            use_container_width=True,
+            num_rows='dynamic'
+        )
         
-        if page_ranges_input.strip():
+        if not page_ranges_df.empty:
             try:
                 # Parse input to extract ranges
                 ranges = []
-                for line in page_ranges_input.splitlines():
-                    if '-' in line:
-                        start, end = line.split('-')
-                        start_page = int(start.strip()) - 1
-                        end_page = int(end.strip()) - 1
-
-                        # Validate the ranges
+                for idx, row in page_ranges_df.iterrows():
+                    if pd.notna(row['من صفحة (إجباري)']) and pd.notna(row['إلى صفحة (إجباري)']):
+                        start_page = int(row['من صفحة (إجباري)']) - 1
+                        end_page = int(row['إلى صفحة (إجباري)']) - 1
                         if start_page < 0 or end_page >= len(document) or start_page > end_page:
-                            st.error(f"المدى المدخل غير صالح: {line}")
+                        st.error(f"المدى المدخل غير صالح: من صفحة {row['من صفحة (إجباري)']} إلى صفحة {row['إلى صفحة (إجباري)']}")
                             break
-                        ranges.append((start_page, end_page))
+                            ranges.append((start_page, end_page))
                 
                 if ranges:
                     # Create output folder
