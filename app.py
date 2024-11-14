@@ -59,7 +59,7 @@ st.markdown("<div class='sub-title' style='font-size: 10px;'>تصميم: الم�
 
 # Display usage instructions
 st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>", unsafe_allow_html=True)
-st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك من خلال إدخال المستندات. يجب أن تُحدد نطاق كل مستند بإدخال الصفحات من وإلى. إذا لم يكن هناك توافق بين إجمالي عدد الصفحات وإجمالي النطاقات المحددة، ستظهر رسالة خطأ.</div>", unsafe_allow_html=True)
+st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك من خلال إدخال المستندات. يجب أن تُحدد نطاق كل مستند بإدخال الصفحات من وإلى. </div>", unsafe_allow_html=True)
 
 # Upload PDF file
 uploaded_file = st.file_uploader("ارفع ملف PDF", type=["pdf"])
@@ -106,9 +106,7 @@ if uploaded_file is not None:
                 total_selected_pages += (end_page - start_page + 1)
 
             # Check if the total selected pages match the total pages in the document
-            if total_selected_pages != total_pages:
-                st.error("إجمالي الصفحات المحددة لا يتوافق مع إجمالي عدد صفحات الملف.")
-            else:
+                        else:
                 # Create output folder
                 output_folder = "E:\الملفات_المقسمة"
                 os.makedirs(output_folder, exist_ok=True)
