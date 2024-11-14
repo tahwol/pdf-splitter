@@ -90,19 +90,21 @@ if uploaded_file is not None:
     page_ranges = st.session_state.page_ranges
     start_page = st.session_state.start_page
 
+    idx = 0
     while start_page <= total_pages:
         col1, col2, col3 = st.columns([1, 1, 2])
         with col1:
-            start_page_input = st.number_input("من صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key=f"start_input_{start_page}")
+            start_page_input = st.number_input("من صفحة رقم", min_value=start_page, max_value=total_pages, step=1, key=f"start_input_{idx}")
         with col2:
-            end_page = st.number_input("إلى صفحة رقم", min_value=start_page_input, max_value=total_pages, step=1, key=f"end_input_{start_page}")
+            end_page = st.number_input("إلى صفحة رقم", min_value=start_page_input, max_value=total_pages, step=1, key=f"end_input_{idx}")
         with col3:
-            doc_name = st.text_input("اسم المستند (اختياري)", value="", key=f"name_input_{start_page}")
-        if st.button('إضافة مستند', key=f"add_button_{start_page}"):
+            doc_name = st.text_input("اسم المستند (اختياري)", value="", key=f"name_input_{idx}")
+        if st.button('إضافة مستند', key=f"add_button_{idx}"):
             page_ranges.append((start_page_input - 1, end_page - 1, doc_name))
             st.session_state.page_ranges = page_ranges
             st.session_state.start_page = end_page + 1
             st.experimental_rerun()
+        idx += 1
 
     # Display the added page ranges
     if page_ranges:
