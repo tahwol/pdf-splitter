@@ -60,7 +60,7 @@ st.markdown("<div class='sub-title' style='font-size: 10px;'>برمجة: الم�
 
 # Display usage instructions
 st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>", unsafe_allow_html=True)
-st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك من خلال الجدول أدناه. يجب أن تُحدد نطاق كل مستند بإدخال الصفحات من وإلى. إذا لم يكن هناك توافق بين إجمالي عدد الصفحات وإجمالي النطاقات المحددة، ستظهر رسالة خطأ.</div>", unsafe_allow_html=True)
+st.markdown("<div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك من خلال إدخال النطاقات. يجب أن تُحدد نطاق كل مستند بإدخال الصفحات من وإلى. إذا لم يكن هناك توافق بين إجمالي عدد الصفحات وإجمالي النطاقات المحددة، ستظهر رسالة خطأ.</div>", unsafe_allow_html=True)
 
 # Upload PDF file
 uploaded_file = st.file_uploader("ارفع ملف PDF", type=["pdf"])
@@ -72,9 +72,8 @@ if uploaded_file is not None:
     document = fitz.open(stream=pdf_data, filetype="pdf")
     total_pages = len(document)
 
-    # Create a DataFrame to input page ranges
-    page_ranges_df = pd.DataFrame(columns=['اسم الملف (اختياري)', 'من صفحة (إجباري)', 'إلى صفحة (إجباري)'])
-    page_ranges_df = st.experimental_data_editor(page_ranges_df, use_container_width=True, num_rows='dynamic')
+    # User input for custom page ranges
+    page_ranges_input = st.text_area("أدخل نطاقات الصفحات (مثال: من صفحة 1 إلى صفحة 4، من صفحة 5 إلى صفحة 10)")
 
     # Button to start splitting process
     if st.button('تحويل الآن'):
@@ -83,18 +82,19 @@ if uploaded_file is not None:
             ranges = []
             total_selected_pages = 0
 
-            for _, row in page_ranges_df.iterrows():
-                if pd.notna(row['من صفحة (إجباري)']) and pd.notna(row['إلى صفحة (إجباري)']):
-                    start_page = int(row['من صفحة (إجباري)']) - 1
-                    end_page = int(row['إلى صفحة (إجباري)']) - 1
+            for line in page_ranges_input.splitlines():
+                if 'إلى' in line:
+                    parts = line.split('إلى')
+                    start_page = int(parts[0].replace('من صفحة', '').strip()) - 1
+                    end_page = int(parts[1].strip()) - 1
 
                     # Validate the ranges
                     if start_page < 0 or end_page >= total_pages or start_page > end_page:
-                        st.error(f"المدى المدخل غير صالح: من صفحة {row['من صفحة (إجباري)']} إلى صفحة {row['إلى صفحة (إجباري)']}")
+                        st.error(f"المدى المدخل غير صالح: {line}")
                         break
                     
                     total_selected_pages += (end_page - start_page + 1)
-                    ranges.append((start_page, end_page, row['اسم الملف (اختياري)'] if pd.notna(row['اسم الملف (اختياري)']) else None))
+                    ranges.append((start_page, end_page, None))
 
             # Check if the total selected pages match the total pages in the document
             if total_selected_pages != total_pages:
