@@ -133,7 +133,3 @@ if uploaded_file is not None:
 
         except ValueError:
             st.error("الرجاء التأكد من صحة التنسيق المدخل.")
-
-    # Clear session state to remove uploaded file
-    st.session_state.page_ranges = []
-    st.session_state.start_page = None
