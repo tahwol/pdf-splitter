@@ -75,7 +75,7 @@ st.markdown("<div class='main-title'>تقسيم ملفات PDF</div>", unsafe_al
 st.markdown("<div class='sub-title' style='font-size: 10px;'>برمجة: المستشار سمير عبد العظيم حيطاوي</div>", unsafe_allow_html=True)
 
 # Display usage instructions
-st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>
+st.markdown("<h3 style='text-align: center;'>تعليمات الاستخدام</h3>>
 <div class='instruction'>ارفع الملف ثم اختر طريقة التقسيم المناسبة لك: تقسيم كل ورقة في ملف منفصل أو تقسيم إلى ملفات تحتوي على نطاق من الصفحات.</div>", unsafe_allow_html=True)
 
 # Upload PDF file
@@ -113,12 +113,13 @@ if uploaded_file is not None:
 
         # Provide download button for the ZIP file
         with open(zip_filename, "rb") as f:
-            if st.button('تحويل الآن'):
-            
-                label="تحميل الكل كملف ZIP",
-                data=f,
-                file_name=os.path.basename(zip_filename),
-                mime="application/zip"
+    if st.button('تحويل الآن'):
+        st.download_button(
+            label="تحميل الكل كملف ZIP",
+            data=f,
+            file_name=os.path.basename(zip_filename),
+            mime="application/zip"
+        )
             )
 
         st.success("تم تقسيم الملفات بنجاح وتحويلها إلى ملف مضغوط!")
@@ -131,8 +132,11 @@ if uploaded_file is not None:
         # User input for custom page ranges
         page_ranges_input = import pandas as pd
 
-        page_ranges_df = st.experimental_data_editor(
-            pd.DataFrame(columns=['اسم الملف (اختياري)', 'من صفحة (إجباري)', 'إلى صفحة (إجباري)']),
+page_ranges_df = st.experimental_data_editor(
+    pd.DataFrame(columns=['اسم الملف (اختياري)', 'من صفحة (إجباري)', 'إلى صفحة (إجباري)']),
+    use_container_width=True,
+    num_rows='dynamic'
+)', 'من صفحة (إجباري)', 'إلى صفحة (إجباري)']),
             use_container_width=True,
             num_rows='dynamic'
         )
@@ -143,12 +147,12 @@ if uploaded_file is not None:
                 ranges = []
                 for idx, row in page_ranges_df.iterrows():
                     if pd.notna(row['من صفحة (إجباري)']) and pd.notna(row['إلى صفحة (إجباري)']):
-                        start_page = int(row['من صفحة (إجباري)']) - 1
-                        end_page = int(row['إلى صفحة (إجباري)']) - 1
-                        if start_page < 0 or end_page >= len(document) or start_page > end_page:
-                        st.error(f"المدى المدخل غير صالح: من صفحة {row['من صفحة (إجباري)']} إلى صفحة {row['إلى صفحة (إجباري)']}")
-                            break
-                            ranges.append((start_page, end_page))
+    start_page = int(row['من صفحة (إجباري)']) - 1
+    end_page = int(row['إلى صفحة (إجباري)']) - 1
+    if start_page < 0 or end_page >= len(document) or start_page > end_page:
+        st.error(f"المدى المدخل غير صالح: من صفحة {row['من صفحة (إجباري)']} إلى صفحة {row['إلى صفحة (إجباري)']}")
+        break
+    ranges.append((start_page, end_page))
                 
                 if ranges:
                     # Create output folder
