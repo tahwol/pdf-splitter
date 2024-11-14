@@ -125,9 +125,9 @@ if uploaded_file is not None:
         st.write("أدخل تفاصيل تقسيم الملف، مثال: الملف الأول من صفحة 1 إلى 4، الملف الثاني من صفحة 5 إلى 20.")
         
         # User input for custom page ranges
-        page_ranges_input = st.text_area("أدخل تفاصيل التقسيم (كل سطر يمثل مدى معين):", "1-4\n5-20")
+        page_ranges_input = st.text_area("أدخل تفاصيل التقسيم (مثال: من صفحة رقم كذا إلى صفحة رقم كذا)", "")
         
-        if page_ranges_input:
+        if page_ranges_input.strip():
             try:
                 # Parse input to extract ranges
                 ranges = []
