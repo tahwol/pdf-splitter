@@ -132,6 +132,7 @@ if uploaded_file is not None:
         finally:
             # Clean up output files
             for file in output_files:
-                os.remove(file)
+                if os.path.exists(file):
+                    os.remove(file)
             if os.path.exists(zip_filename):
                 os.remove(zip_filename)
